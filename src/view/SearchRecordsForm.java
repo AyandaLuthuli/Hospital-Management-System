@@ -2,20 +2,16 @@ package view;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.*;
 import java.util.*;
 
 public class SearchRecordsForm extends JFrame {
+
     public SearchRecordsForm() {
         setTitle("Search Records");
-        setSize(550, 400);
+        setSize(600, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        // Mock data
-        java.util.List<Map<String, String>> records = new ArrayList<>();
-        records.add(Map.of("Patient ID", "Patient001", "Name", "Ayanda M.", "Doctor", "Dr. Smith", "Date", "2025-09-20", "Medication", "Ibuprofen"));
-        records.add(Map.of("Patient ID", "Patient002", "Name", "Thabo N.", "Doctor", "Dr. Patel", "Date", "2025-09-18", "Medication", "Paracetamol"));
-        records.add(Map.of("Patient ID", "Patient003", "Name", "Naledi K.", "Doctor", "Dr. Mokoena", "Date", "2025-09-19", "Medication", "Amoxicillin"));
 
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -46,25 +42,62 @@ public class SearchRecordsForm extends JFrame {
         JTextArea resultsArea = new JTextArea("Search results will appear here...");
         resultsArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(resultsArea);
-        scrollPane.setPreferredSize(new Dimension(500, 150));
+        scrollPane.setPreferredSize(new Dimension(550, 200));
         panel.add(scrollPane, gbc);
 
         // Search logic
         searchButton.addActionListener(e -> {
             String type = (String) searchTypeBox.getSelectedItem();
             String keyword = keywordField.getText().trim().toLowerCase();
-
             StringBuilder results = new StringBuilder();
-            for (Map<String, String> record : records) {
-                String value = record.get(type);
-                if (value != null && value.toLowerCase().contains(keyword)) {
-                    results.append("Patient ID: ").append(record.get("Patient ID")).append("\n")
-                            .append("Name: ").append(record.get("Name")).append("\n")
-                            .append("Doctor: ").append(record.get("Doctor")).append("\n")
-                            .append("Date: ").append(record.get("Date")).append("\n")
-                            .append("Medication: ").append(record.get("Medication")).append("\n")
-                            .append("---------------\n");
+
+            try (Connection conn = ConnectionBD.getConnection()) {
+                // Query joining patients, doctors, appointments, prescriptions
+                String sql = """
+                    SELECT 
+                        p.id AS patient_id,
+                        p.full_name AS patient_name,
+                        d.full_name AS doctor_name,
+                        a.appointment_date,
+                        pr.medicine
+                    FROM prescriptions pr
+                    JOIN appointments a ON pr.appointment_id = a.id
+                    JOIN patients p ON a.patient_id = p.id
+                    JOIN doctors d ON a.doctor_id = d.id
+                """;
+
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery();
+
+                while (rs.next()) {
+                    String patientId = String.valueOf(rs.getInt("patient_id"));
+                    String name = rs.getString("patient_name");
+                    String doctor = rs.getString("doctor_name");
+                    String date = rs.getDate("appointment_date").toString();
+                    String medication = rs.getString("medicine");
+
+                    boolean match = switch (type) {
+                        case "Patient ID" -> patientId.toLowerCase().contains(keyword);
+                        case "Name" -> name.toLowerCase().contains(keyword);
+                        case "Doctor" -> doctor.toLowerCase().contains(keyword);
+                        case "Date" -> date.toLowerCase().contains(keyword);
+                        case "Medication" -> medication.toLowerCase().contains(keyword);
+                        default -> false;
+                    };
+
+                    if (match) {
+                        results.append("Patient ID: ").append(patientId).append("\n")
+                                .append("Name: ").append(name).append("\n")
+                                .append("Doctor: ").append(doctor).append("\n")
+                                .append("Date: ").append(date).append("\n")
+                                .append("Medication: ").append(medication).append("\n")
+                                .append("----------------------\n");
+                    }
                 }
+
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                results.append("Error fetching records: ").append(ex.getMessage());
             }
 
             resultsArea.setText(results.length() == 0 ? "No matching records found." : results.toString());
