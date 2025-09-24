@@ -1,5 +1,9 @@
 package view;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import javax.swing.*;
 import java.awt.*;
 
@@ -9,14 +13,13 @@ public class LoginFrame extends JFrame {
     private JComboBox<String> roleBox;
 
     public LoginFrame() {
-        setTitle("Hospital Management System - Login");
-        setSize(400, 250);
+        setTitle("Hospital Login");
+        setSize(350, 220);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
+        // Build UI
+        JPanel panel = new JPanel(new GridLayout(4, 2, 5, 5));
         panel.add(new JLabel("Username:"));
         usernameField = new JTextField();
         panel.add(usernameField);
@@ -29,19 +32,56 @@ public class LoginFrame extends JFrame {
         roleBox = new JComboBox<>(new String[]{"Staff", "Patient"});
         panel.add(roleBox);
 
-        JButton loginButton = new JButton("Login");
-        panel.add(loginButton);
-
-        loginButton.addActionListener(e -> {
-            String role = roleBox.getSelectedItem().toString();
-            if (role.equals("Staff")) {
-                new StaffDashboard().setVisible(true);
-            } else {
-                new PatientDashboard().setVisible(true);
-            }
-            dispose();
-        });
+        JButton loginBtn = new JButton("Login");
+        panel.add(loginBtn);
 
         add(panel);
+
+        // Action on login button
+        loginBtn.addActionListener(e -> checkLogin());
+    }
+
+    private void checkLogin() {
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword());
+        String selectedRole = roleBox.getSelectedItem().toString();
+
+        try (Connection conn = ConnectionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT role FROM users WHERE username=? AND password_hash=? AND role=?")) {
+
+            stmt.setString(1, username);
+            stmt.setString(2, password);  // ⚠️ use hashing in real projects
+            stmt.setString(3, selectedRole.toUpperCase()); // DB should store roles in uppercase
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                String role = rs.getString("role");
+                JOptionPane.showMessageDialog(this,
+                        "Welcome " + username + "! Role: " + role);
+
+                // Role-based navigation
+                if (role.equalsIgnoreCase("Staff")) {
+                    new StaffDashboard().setVisible(true);
+                } else if (role.equalsIgnoreCase("Patient")) {
+                    new PatientDashboard().setVisible(true);
+                }
+
+                this.dispose(); // close login
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Invalid username, password, or role.");
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Database error: " + ex.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
     }
 }
