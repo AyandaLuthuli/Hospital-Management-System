@@ -51,8 +51,8 @@ public class LoginFrame extends JFrame {
                      "SELECT role FROM users WHERE username=? AND password_hash=? AND role=?")) {
 
             stmt.setString(1, username);
-            stmt.setString(2, password);  // ⚠️ use hashing in real projects
-            stmt.setString(3, selectedRole.toUpperCase()); // DB should store roles in uppercase
+            stmt.setString(2, password);  // ⚠️ in production, hash this
+            stmt.setString(3, selectedRole.toUpperCase());
 
             ResultSet rs = stmt.executeQuery();
 
@@ -62,10 +62,16 @@ public class LoginFrame extends JFrame {
                         "Welcome " + username + "! Role: " + role);
 
                 // Role-based navigation
-                if (role.equalsIgnoreCase("Staff")) {
+                if (role.equalsIgnoreCase("STAFF")) {
                     new StaffDashboard().setVisible(true);
-                } else if (role.equalsIgnoreCase("Patient")) {
-                    new PatientDashboard().setVisible(true);
+                } else if (role.equalsIgnoreCase("PATIENT")) {
+                    long patientId = getPatientId(conn, username);
+                    if (patientId != -1) {
+                        new PatientDashboard(patientId).setVisible(true);
+                    } else {
+                        JOptionPane.showMessageDialog(this,
+                                "Patient record not found for " + username);
+                    }
                 }
 
                 this.dispose(); // close login
@@ -79,6 +85,21 @@ public class LoginFrame extends JFrame {
             JOptionPane.showMessageDialog(this,
                     "Database error: " + ex.getMessage());
         }
+    }
+
+    // Find patient_id by full_name
+    private long getPatientId(Connection conn, String fullName) {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "SELECT id FROM patients WHERE full_name = ?")) {
+            stmt.setString(1, fullName);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getLong("id");
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return -1; // not found
     }
 
     public static void main(String[] args) {
