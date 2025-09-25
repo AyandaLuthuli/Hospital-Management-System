@@ -4,7 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 
 public class PatientDashboard extends JFrame {
-    public PatientDashboard() {
+    private long patientId;
+
+    public PatientDashboard(long patientId) {
+        this.patientId = patientId;
+
         setTitle("Patient Dashboard");
         setSize(600, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -14,11 +18,11 @@ public class PatientDashboard extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
 
         JButton viewAppointmentsBtn = new JButton("View Appointments");
-        viewAppointmentsBtn.addActionListener(e -> new ViewAppointmentsForm().setVisible(true));
+        viewAppointmentsBtn.addActionListener(e -> new ViewAppointmentsForm(patientId).setVisible(true));
         panel.add(viewAppointmentsBtn);
 
         JButton viewPrescriptionsBtn = new JButton("View Prescriptions");
-        viewPrescriptionsBtn.addActionListener(e -> new ViewPrescriptionsForm().setVisible(true));
+        viewPrescriptionsBtn.addActionListener(e -> new ViewPrescriptionsForm(patientId).setVisible(true));
         panel.add(viewPrescriptionsBtn);
 
         JButton searchDoctorsBtn = new JButton("Search Doctors");
