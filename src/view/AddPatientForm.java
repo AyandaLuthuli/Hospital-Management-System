@@ -76,22 +76,38 @@ public class AddPatientForm extends JFrame {
             return;
         }
 
-        try (Connection conn = ConnectionBD.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(
-                     "INSERT INTO patients (full_name, dob, gender, phone, email, address) VALUES (?, ?, ?, ?, ?, ?)")) {
+        try (Connection conn = ConnectionBD.getConnection()) {
+            conn.setAutoCommit(false); // Start transaction
 
-            stmt.setString(1, fullName);
-            stmt.setString(2, dob); // Ensure format YYYY-MM-DD
-            stmt.setString(3, gender);
-            stmt.setString(4, phone);
-            stmt.setString(5, email);
-            stmt.setString(6, address);
+            try {
+                // Insert into patients
+                String patientSql = "INSERT INTO patients (full_name, dob, gender, phone, email, address) VALUES (?, ?, ?, ?, ?, ?)";
+                try (PreparedStatement stmt = conn.prepareStatement(patientSql)) {
+                    stmt.setString(1, fullName);
+                    stmt.setString(2, dob);
+                    stmt.setString(3, gender);
+                    stmt.setString(4, phone);
+                    stmt.setString(5, email);
+                    stmt.setString(6, address);
+                    stmt.executeUpdate();
+                }
 
-            int rows = stmt.executeUpdate();
+                // Insert into users (username = full name, password = 123456)
+                String defaultPassword = "123456";
+                String userSql = "INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'Patient')";
+                try (PreparedStatement stmt2 = conn.prepareStatement(userSql)) {
+                    stmt2.setString(1, fullName); // username = full name
+                    stmt2.setString(2, defaultPassword);
+                    stmt2.executeUpdate();
+                }
 
-            if (rows > 0) {
-                JOptionPane.showMessageDialog(this, "Patient added successfully!");
-                dispose(); // Close form after success
+                conn.commit(); // Commit both
+                JOptionPane.showMessageDialog(this, "Patient and user account created successfully!");
+                dispose();
+
+            } catch (SQLException ex) {
+                conn.rollback(); // Rollback if error
+                throw ex;
             }
 
         } catch (SQLException ex) {

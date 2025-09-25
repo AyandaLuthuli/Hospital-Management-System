@@ -51,8 +51,8 @@ public class LoginFrame extends JFrame {
                      "SELECT role FROM users WHERE username=? AND password_hash=? AND role=?")) {
 
             stmt.setString(1, username);
-            stmt.setString(2, password);  // ⚠️ used hashing in real projects
-            stmt.setString(3, selectedRole.toUpperCase()); // DB  stores roles in uppercase
+            stmt.setString(2, password);  // ⚠️ use hashing in real projects
+            stmt.setString(3, selectedRole.toUpperCase()); // DB should store roles in uppercase
 
             ResultSet rs = stmt.executeQuery();
 
