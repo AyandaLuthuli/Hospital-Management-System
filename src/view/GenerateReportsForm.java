@@ -2,10 +2,8 @@ package view;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.*;
 import java.util.*;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
 
 public class GenerateReportsForm extends JFrame {
     public GenerateReportsForm() {
@@ -13,25 +11,6 @@ public class GenerateReportsForm extends JFrame {
         setSize(600, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        // Mock data
-        java.util.List<Map<String, String>> appointments = List.of(
-                Map.of("Patient", "Ayanda M.", "Doctor", "Dr. Smith", "Date", "2025-09-20"),
-                Map.of("Patient", "Thabo N.", "Doctor", "Dr. Patel", "Date", "2025-09-18"),
-                Map.of("Patient", "Naledi K.", "Doctor", "Dr. Mokoena", "Date", "2025-09-19")
-        );
-
-        java.util.List<Map<String, String>> prescriptions = List.of(
-                Map.of("Patient", "Ayanda M.", "Medication", "Ibuprofen", "Date", "2025-09-20"),
-                Map.of("Patient", "Thabo N.", "Medication", "Paracetamol", "Date", "2025-09-18"),
-                Map.of("Patient", "Naledi K.", "Medication", "Amoxicillin", "Date", "2025-09-19")
-        );
-
-        java.util.List<Map<String, String>> patients = List.of(
-                Map.of("Name", "Ayanda M.", "Age", "29", "Gender", "Female"),
-                Map.of("Name", "Thabo N.", "Age", "34", "Gender", "Male"),
-                Map.of("Name", "Naledi K.", "Age", "41", "Gender", "Female")
-        );
 
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -49,7 +28,7 @@ public class GenerateReportsForm extends JFrame {
         gbc.gridx = 0; gbc.gridy = 1;
         panel.add(new JLabel("Date Range:"), gbc);
         gbc.gridx = 1;
-        JTextField dateRangeField = new JTextField("2025-09-18 to 2025-09-20");
+        JTextField dateRangeField = new JTextField("2025-09-01 to 2025-09-30");
         panel.add(dateRangeField, gbc);
 
         // Row 2: Generate button
@@ -75,25 +54,54 @@ public class GenerateReportsForm extends JFrame {
 
             StringBuilder report = new StringBuilder("📄 " + type + " Report\n\n");
 
-            java.util.List<Map<String, String>> source = switch (type) {
-                case "Appointments" -> appointments;
-                case "Prescriptions" -> prescriptions;
-                default -> patients;
-            };
+            try (Connection conn = ConnectionBD.getConnection()) {
+                PreparedStatement stmt = null;
 
-            for (Map<String, String> record : source) {
-                String recordDate = record.get("Date");
-                if (type.equals("Patients") || (recordDate != null &&
-                        recordDate.compareTo(fromDate) >= 0 && recordDate.compareTo(toDate) <= 0)) {
+                if ("Appointments".equals(type)) {
+                    stmt = conn.prepareStatement(
+                            "SELECT a.id, p.full_name AS patient, d.full_name AS doctor, a.appointment_date, a.time_slot, a.status, a.reason " +
+                                    "FROM appointments a " +
+                                    "JOIN patients p ON a.patient_id = p.id " +
+                                    "JOIN doctors d ON a.doctor_id = d.id " +
+                                    "WHERE a.appointment_date BETWEEN ? AND ?");
+                    stmt.setString(1, fromDate);
+                    stmt.setString(2, toDate);
+                } else if ("Prescriptions".equals(type)) {
+                    stmt = conn.prepareStatement(
+                            "SELECT pr.id, p.full_name AS patient, d.full_name AS doctor, pr.medicine, pr.dosage, pr.instructions, pr.created_at " +
+                                    "FROM prescriptions pr " +
+                                    "JOIN appointments a ON pr.appointment_id = a.id " +
+                                    "JOIN patients p ON a.patient_id = p.id " +
+                                    "JOIN doctors d ON pr.prescribed_by = d.id " +
+                                    "WHERE pr.created_at BETWEEN ? AND ?");
+                    stmt.setString(1, fromDate + " 00:00:00");
+                    stmt.setString(2, toDate + " 23:59:59");
+                } else { // Patients
+                    stmt = conn.prepareStatement(
+                            "SELECT id, full_name, dob, gender, phone, email FROM patients");
+                }
 
-                    for (Map.Entry<String, String> entry : record.entrySet()) {
-                        report.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+                ResultSet rs = stmt.executeQuery();
+
+                ResultSetMetaData meta = rs.getMetaData();
+                int colCount = meta.getColumnCount();
+
+                while (rs.next()) {
+                    for (int i = 1; i <= colCount; i++) {
+                        report.append(meta.getColumnLabel(i))
+                                .append(": ")
+                                .append(rs.getString(i))
+                                .append("\n");
                     }
                     report.append("---------------\n");
                 }
-            }
 
-            resultsArea.setText(report.length() > 0 ? report.toString() : "No records found in the selected range.");
+                resultsArea.setText(report.length() > 0 ? report.toString() : "No records found in the selected range.");
+
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage());
+            }
         });
 
         add(panel);
