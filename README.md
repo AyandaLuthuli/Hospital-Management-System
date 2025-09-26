@@ -1,57 +1,84 @@
-📋 Hospital Management System
+🏥 Hospital Management System
 
-This project is a Java Swing desktop application for managing hospital operations. It demonstrates OOP concepts, Swing UI design, and database integration (MySQL/H2).
+A Java Swing + MySQL based desktop application that helps hospitals manage patients, staff, appointments, prescriptions, and doctors efficiently.
 
-🚀 Features
+✨ Features
+🔐 Authentication
 
-🔑 User Authentication — Role-based access (Admin, Reception, Doctor, Patient).
+Login with username (from full name), password, and role (Staff/Patient).
 
-👩‍⚕️ Doctors Module — Manage doctor profiles (specialty, license number, availability, working hours).
+Role-based dashboards.
 
-🧑‍🤝‍🧑 Patients Module — Register and manage patient details with optional photo upload.
+Logout functionality.
 
-📅 Appointments — Schedule, update, and cancel appointments while preventing time overlaps.
+👩‍⚕️ Staff Dashboard
 
-💊 Prescriptions — Add prescriptions linked to appointments and doctors.
+Add new patients.
 
-📊 Search & Reporting — Find patients/doctors and generate simple reports.
+Schedule appointments.
 
-✅ Validation & Error Handling — Input checks, exception handling, and feedback dialogs.
+Manage prescriptions.
 
-🛠️ Tech Stack
+Search patient records.
 
-Java Swing — Frontend UI
+Generate reports (Appointments, Prescriptions, Patients).
 
-JDBC — Database connectivity
+🧑‍🤝‍🧑 Patient Dashboard
 
-MySQL / H2 — Backend database
+View appointments.
 
-Maven/Gradle — Dependency management
+View prescriptions.
 
-BCrypt — Password hashing for secure authentication
+Search doctors by specialty.
 
-📂 Database Schema
+🩺 Doctor Management
 
-users — Authentication & role-based access
+Store and search doctors with:
 
-patients — Patient details
+Name, specialty, phone, email, license number, availability, working hours.
 
-doctors — Doctor details with license & working hours
+🗄 Database Schema
+Tables
 
-appointments — Scheduling system with doctor-patient linkage
+users → id, username, password, role
 
-prescriptions — Prescription records linked to appointments
+patients → id, full_name, dob, gender, phone, email, address, photo_path
 
-🎯 Purpose
+doctors → id, full_name, specialty, phone, email, license_no, available, working_hours
 
-This system was built as a student project assignment to apply:
+appointments → id, patient_id, doctor_id, appointment_date, time_slot, status, notes
 
-MVC architecture
+prescriptions → id, appointment_id, prescribed_by, medicine, dosage, instructions
 
-Swing components & layout managers
+Relationships
 
-Event handling
+A patient ➝ multiple appointments.
 
-Database integration (CRUD)
+Appointment ➝ linked to one doctor, can have multiple prescriptions.
 
-Threading and Look & Feel customization
+⚙️ Technology Stack
+
+Language: Java
+
+GUI: Swing (JFrame, JPanel, GridLayout, etc.)
+
+Database: MySQL (JDBC connection)
+
+IDE: IntelliJ IDEA / Eclipse / NetBeans
+
+
+🔒 Security Notes
+
+Currently, passwords are stored as plain text (⚠️).
+
+For production, use hashing (e.g., BCrypt, SHA-256).
+
+🛠 Future Enhancements
+
+Add Admin role for system-wide management.
+
+Implement billing & payments module.
+
+Email/SMS appointment notifications.
+
+Upgrade UI to JavaFX or Web-based frontend.
