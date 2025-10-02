@@ -11,6 +11,7 @@ public class ViewAppointmentsForm extends JFrame {
         setTitle("Your Appointments");
         setSize(500, 400);
         setLocationRelativeTo(null);
+        setResizable(false);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         JPanel panel = new JPanel(new BorderLayout());

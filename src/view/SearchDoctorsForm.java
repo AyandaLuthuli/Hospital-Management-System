@@ -14,6 +14,7 @@ public class SearchDoctorsForm extends JFrame {
         setSize(700, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setResizable(false);
 
         // 🔹 Top search panel
         JPanel searchPanel = new JPanel(new FlowLayout());

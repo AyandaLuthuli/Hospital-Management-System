@@ -14,6 +14,7 @@ public class ViewPrescriptionsForm extends JFrame {
         setSize(500, 300);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setResizable(false);
 
         JTextArea prescriptionsArea = new JTextArea();
         prescriptionsArea.setEditable(false);

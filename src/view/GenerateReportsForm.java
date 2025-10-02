@@ -11,6 +11,7 @@ public class GenerateReportsForm extends JFrame {
         setSize(600, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setResizable(false); // Make the page fixed - cannot be resized
 
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -31,10 +32,16 @@ public class GenerateReportsForm extends JFrame {
         JTextField dateRangeField = new JTextField("2025-09-01 to 2025-09-30");
         panel.add(dateRangeField, gbc);
 
-        // Row 2: Generate button
+        // Row 2: Buttons panel
         gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
+        JPanel buttonPanel = new JPanel(new FlowLayout());
         JButton generateButton = new JButton("Generate");
-        panel.add(generateButton, gbc);
+        JButton clearButton = new JButton("Clear");
+        JButton backButton = new JButton("Back");
+        buttonPanel.add(generateButton);
+        buttonPanel.add(clearButton);
+        buttonPanel.add(backButton);
+        panel.add(buttonPanel, gbc);
 
         // Row 3: Results area
         gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
@@ -102,6 +109,20 @@ public class GenerateReportsForm extends JFrame {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage());
             }
+        });
+
+        // Clear button logic
+        clearButton.addActionListener(e -> {
+            reportTypeBox.setSelectedIndex(0);
+            dateRangeField.setText("2025-09-01 to 2025-09-30");
+            resultsArea.setText("Report output will appear here...");
+        });
+
+        // Back button logic
+        backButton.addActionListener(e -> {
+            dispose(); // Close the current form
+            // If you have a main menu or previous form, you can show it here
+            // new MainMenuForm().setVisible(true);
         });
 
         add(panel);

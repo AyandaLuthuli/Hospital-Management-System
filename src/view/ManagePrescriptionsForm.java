@@ -18,56 +18,30 @@ public class ManagePrescriptionsForm extends JFrame {
 
     public ManagePrescriptionsForm() {
         setTitle("Manage Prescriptions");
-        setSize(500, 450);
+        setSize(550, 500);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setResizable(false); // Prevent resizing to maintain fixed layout
 
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Row 0: Appointment dropdown
-        gbc.gridx = 0; gbc.gridy = 0;
-        panel.add(new JLabel("Select Appointment:"), gbc);
-        gbc.gridx = 1;
-        appointmentBox = new JComboBox<>();
-        panel.add(appointmentBox, gbc);
+        // Title Panel
+        JPanel titlePanel = new JPanel();
+        JLabel titleLabel = new JLabel("Manage Prescriptions");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titlePanel.add(titleLabel);
+        mainPanel.add(titlePanel, BorderLayout.NORTH);
 
-        // Row 1-3: Patient details
-        gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Name:"), gbc);
-        gbc.gridx = 1; patientNameValue = new JLabel("-"); panel.add(patientNameValue, gbc);
+        // Form Panel
+        JPanel formPanel = createFormPanel();
+        mainPanel.add(formPanel, BorderLayout.CENTER);
 
-        gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Age:"), gbc);
-        gbc.gridx = 1; ageValue = new JLabel("-"); panel.add(ageValue, gbc);
+        // Button Panel
+        JPanel buttonPanel = createButtonPanel();
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Gender:"), gbc);
-        gbc.gridx = 1; genderValue = new JLabel("-"); panel.add(genderValue, gbc);
-
-        // Row 4: Doctor
-        gbc.gridx = 0; gbc.gridy = 4;
-        panel.add(new JLabel("Prescribed By:"), gbc);
-        gbc.gridx = 1;
-        doctorBox = new JComboBox<>();
-        panel.add(doctorBox, gbc);
-
-        // Row 5-7: Prescription fields
-        gbc.gridx = 0; gbc.gridy = 5; panel.add(new JLabel("Medication:"), gbc);
-        gbc.gridx = 1; medicationField = new JTextField(); panel.add(medicationField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 6; panel.add(new JLabel("Dosage:"), gbc);
-        gbc.gridx = 1; dosageField = new JTextField(); panel.add(dosageField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 7; panel.add(new JLabel("Instructions/Notes:"), gbc);
-        gbc.gridx = 1; notesField = new JTextField(); panel.add(notesField, gbc);
-
-        // Row 8: Save button
-        gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2;
-        JButton saveButton = new JButton("Save Prescription");
-        panel.add(saveButton, gbc);
-
-        add(panel);
+        add(mainPanel);
 
         // Load appointments and doctors from DB
         loadAppointments();
@@ -75,9 +49,158 @@ public class ManagePrescriptionsForm extends JFrame {
 
         // Update patient details when an appointment is selected
         appointmentBox.addActionListener(e -> updatePatientDetails());
+    }
 
-        // Save prescription
+    private JPanel createFormPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Fixed sizes for consistent layout
+        Dimension fieldSize = new Dimension(250, 25);
+        Dimension labelSize = new Dimension(120, 25);
+
+        // Row 0: Appointment dropdown
+        gbc.gridx = 0; gbc.gridy = 0;
+        JLabel appointmentLabel = new JLabel("Select Appointment:");
+        appointmentLabel.setPreferredSize(labelSize);
+        panel.add(appointmentLabel, gbc);
+
+        gbc.gridx = 1;
+        appointmentBox = new JComboBox<>();
+        appointmentBox.setPreferredSize(fieldSize);
+        panel.add(appointmentBox, gbc);
+
+        // Row 1: Patient Details Panel
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2;
+        gbc.insets = new Insets(10, 5, 5, 5);
+        JPanel patientPanel = createPatientPanel();
+        patientPanel.setPreferredSize(new Dimension(500, 80));
+        panel.add(patientPanel, gbc);
+
+        // Row 2: Doctor
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 1;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        JLabel doctorLabel = new JLabel("Prescribed By:");
+        doctorLabel.setPreferredSize(labelSize);
+        panel.add(doctorLabel, gbc);
+
+        gbc.gridx = 1;
+        doctorBox = new JComboBox<>();
+        doctorBox.setPreferredSize(fieldSize);
+        panel.add(doctorBox, gbc);
+
+        // Row 3: Prescription Details Panel
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
+        gbc.insets = new Insets(10, 5, 5, 5);
+        JPanel prescriptionPanel = createPrescriptionPanel();
+        prescriptionPanel.setPreferredSize(new Dimension(500, 120));
+        panel.add(prescriptionPanel, gbc);
+
+        return panel;
+    }
+
+    private JPanel createPatientPanel() {
+        JPanel panel = new JPanel(new GridLayout(3, 2, 5, 5));
+        panel.setBorder(BorderFactory.createTitledBorder("Patient Information"));
+        panel.setPreferredSize(new Dimension(480, 80));
+
+        // Fixed size for value labels
+        Dimension valueSize = new Dimension(150, 20);
+
+        JLabel nameLabel = new JLabel("Name:");
+        panel.add(nameLabel);
+        patientNameValue = new JLabel("-");
+        patientNameValue.setPreferredSize(valueSize);
+        patientNameValue.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
+        panel.add(patientNameValue);
+
+        JLabel ageLabel = new JLabel("Age:");
+        panel.add(ageLabel);
+        ageValue = new JLabel("-");
+        ageValue.setPreferredSize(valueSize);
+        ageValue.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
+        panel.add(ageValue);
+
+        JLabel genderLabel = new JLabel("Gender:");
+        panel.add(genderLabel);
+        genderValue = new JLabel("-");
+        genderValue.setPreferredSize(valueSize);
+        genderValue.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
+        panel.add(genderValue);
+
+        return panel;
+    }
+
+    private JPanel createPrescriptionPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Prescription Details"));
+        panel.setPreferredSize(new Dimension(480, 120));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(3, 3, 3, 3);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        Dimension labelSize = new Dimension(120, 25);
+        Dimension fieldSize = new Dimension(300, 25);
+
+        // Medication
+        gbc.gridx = 0; gbc.gridy = 0;
+        JLabel medLabel = new JLabel("Medication:");
+        medLabel.setPreferredSize(labelSize);
+        panel.add(medLabel, gbc);
+
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        medicationField = new JTextField();
+        medicationField.setPreferredSize(fieldSize);
+        panel.add(medicationField, gbc);
+
+        // Dosage
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
+        JLabel dosageLabel = new JLabel("Dosage:");
+        dosageLabel.setPreferredSize(labelSize);
+        panel.add(dosageLabel, gbc);
+
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        dosageField = new JTextField();
+        dosageField.setPreferredSize(fieldSize);
+        panel.add(dosageField, gbc);
+
+        // Instructions/Notes
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
+        JLabel notesLabel = new JLabel("Instructions/Notes:");
+        notesLabel.setPreferredSize(labelSize);
+        panel.add(notesLabel, gbc);
+
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        notesField = new JTextField();
+        notesField.setPreferredSize(fieldSize);
+        panel.add(notesField, gbc);
+
+        return panel;
+    }
+
+    private JPanel createButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        panel.setPreferredSize(new Dimension(500, 50));
+
+        JButton backButton = new JButton("Back");
+        backButton.setPreferredSize(new Dimension(100, 30));
+        backButton.addActionListener(e -> dispose());
+
+        JButton saveButton = new JButton("Save Prescription");
+        saveButton.setPreferredSize(new Dimension(140, 30));
         saveButton.addActionListener(e -> savePrescription());
+
+        panel.add(backButton);
+        panel.add(saveButton);
+
+        return panel;
     }
 
     private void loadAppointments() {
@@ -87,6 +210,9 @@ public class ManagePrescriptionsForm extends JFrame {
                      "SELECT a.id AS appointment_id, p.full_name, p.dob, p.gender " +
                              "FROM appointments a " +
                              "JOIN patients p ON a.patient_id = p.id")) {
+
+            // Add empty default option
+            appointmentBox.addItem("-- Select Appointment --");
 
             while (rs.next()) {
                 int appointmentId = rs.getInt("appointment_id");
@@ -106,6 +232,9 @@ public class ManagePrescriptionsForm extends JFrame {
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT id, full_name FROM doctors WHERE available = true")) {
 
+            // Add empty default option
+            doctorBox.addItem("-- Select Doctor --");
+
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String display = rs.getString("full_name");
@@ -121,7 +250,7 @@ public class ManagePrescriptionsForm extends JFrame {
 
     private void updatePatientDetails() {
         String selected = (String) appointmentBox.getSelectedItem();
-        if (selected != null) {
+        if (selected != null && !selected.equals("-- Select Appointment --")) {
             int appointmentId = appointmentMap.get(selected);
             try (Connection conn = ConnectionBD.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(
@@ -145,6 +274,11 @@ public class ManagePrescriptionsForm extends JFrame {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        } else {
+            // Clear patient details if no appointment is selected
+            patientNameValue.setText("-");
+            ageValue.setText("-");
+            genderValue.setText("-");
         }
     }
 
@@ -155,8 +289,20 @@ public class ManagePrescriptionsForm extends JFrame {
         String dosage = dosageField.getText().trim();
         String instructions = notesField.getText().trim();
 
-        if (selectedAppointment == null || selectedDoctor == null || medication.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please fill all required fields.");
+        // Validation
+        if (selectedAppointment == null || selectedAppointment.equals("-- Select Appointment --")) {
+            JOptionPane.showMessageDialog(this, "Please select an appointment.");
+            return;
+        }
+
+        if (selectedDoctor == null || selectedDoctor.equals("-- Select Doctor --")) {
+            JOptionPane.showMessageDialog(this, "Please select a doctor.");
+            return;
+        }
+
+        if (medication.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter medication name.");
+            medicationField.requestFocus();
             return;
         }
 
@@ -177,12 +323,23 @@ public class ManagePrescriptionsForm extends JFrame {
             int rows = stmt.executeUpdate();
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "Prescription saved successfully!");
-                dispose();
+                clearForm();
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error saving prescription: " + e.getMessage());
         }
+    }
+
+    private void clearForm() {
+        appointmentBox.setSelectedIndex(0);
+        doctorBox.setSelectedIndex(0);
+        medicationField.setText("");
+        dosageField.setText("");
+        notesField.setText("");
+        patientNameValue.setText("-");
+        ageValue.setText("-");
+        genderValue.setText("-");
     }
 }
